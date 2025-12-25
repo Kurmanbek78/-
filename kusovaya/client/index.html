@@ -85,7 +85,7 @@ function sendAnswer(answer, timeout) {
   })
     .then(res => res.json())
     .then(data => {
-      document.getElementById("r").innerText = timeout ? "⏰ Время вышло!" : data.result;
+      document.getElementById("r").innerText = timeout ? " Время вышло!" : data.result;
       document.getElementById("correct").innerText = data.correct;
       document.getElementById("wrong").innerText = data.wrong;
     });
@@ -94,3 +94,4 @@ function sendAnswer(answer, timeout) {
 
 </body>
 </html>
+
