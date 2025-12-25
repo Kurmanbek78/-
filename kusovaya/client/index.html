@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Генератор задач</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h2 id="q">Нажми «Новая задача»</h2>
+<input id="a" placeholder="Введите ответ">
+
+<br><br>
+
+<button onclick="newTask()">Новая задача</button>
+<button onclick="check()">Ответить</button>
+
+<p id="r"></p>
+<hr>
+
+<p> Время: <span id="time">10</span> сек</p>
+<p> Правильно: <span id="correct">0</span></p>
+<p> Неправильно: <span id="wrong">0</span></p>
+
+<script>
+let correctAnswer = 0;
+let timer = 10;
+let interval = null;
+let canAnswer = false;
+
+function newTask() {
+  canAnswer = true;
+  document.getElementById("a").disabled = false;
+
+  fetch("http://127.0.0.1:8000/task")
+    .then(res => res.json())
+    .then(data => {
+      document.getElementById("q").innerText = data.question;
+      correctAnswer = data.answer;
+      document.getElementById("a").value = "";
+      document.getElementById("r").innerText = "";
+      startTimer();
+    })
+    .catch(() => {
+      document.getElementById("r").innerText = "Ошибка соединения с сервером";
+    });
+}
+
+function startTimer() {
+  clearInterval(interval);
+  timer = 10;
+  document.getElementById("time").innerText = timer;
+
+  interval = setInterval(() => {
+    timer--;
+    document.getElementById("time").innerText = timer;
+
+    if (timer <= 0) {
+      clearInterval(interval);
+      timeIsUp();
+    }
+  }, 1000);
+}
+
+function timeIsUp() {
+  if (!canAnswer) return;
+  canAnswer = false;
+  document.getElementById("a").disabled = true;
+  sendAnswer(-1, true);
+}
+
+function check() {
+  if (!canAnswer) return;
+  clearInterval(interval);
+  canAnswer = false;
+  document.getElementById("a").disabled = true;
+
+  const userAnswer = document.getElementById("a").value;
+  sendAnswer(userAnswer, false);
+}
+
+function sendAnswer(answer, timeout) {
+  fetch(`http://127.0.0.1:8000/check?user_answer=${answer}&correct_answer=${correctAnswer}`, {
+    method: "POST"
+  })
+    .then(res => res.json())
+    .then(data => {
+      document.getElementById("r").innerText = timeout ? "⏰ Время вышло!" : data.result;
+      document.getElementById("correct").innerText = data.correct;
+      document.getElementById("wrong").innerText = data.wrong;
+    });
+}
+</script>
+
+</body>
+</html>
